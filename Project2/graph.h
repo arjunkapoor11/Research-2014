@@ -1,24 +1,55 @@
 #include <vector>
+using std::vector;
 
-int * combineGraphs(int * graph);
+int * combineGraphs(int * graph, int, int);
+void das(bool *, int, int, int, int, int);
 
 class graph
 {
 private:
-	bool adj[64][64];
-	int dist[64][64];
+	int nodes;
+	bool ** adj;
+	int ** dist;
 	bool distsCalculated;
 public:
-	graph(bool * a){
+	graph(bool * a, int numNodes){
 		distsCalculated = false;
-		for (int i = 0; i < 8; i++)
-		for (int j = 0; j < 8; j++)
-			adj[i][j] = a[8 * i + j];
+		nodes = numNodes;
+		adj = new bool *[nodes];
+		dist = new int *[nodes];
+		for (int i = 0; i < nodes; i++){
+			adj[i] = new bool[nodes];
+			dist[i] = new int[nodes];
+		}
+		for (int i = 0; i < nodes; i++){
+			for (int j = 0; j < nodes; j++){
+				adj[i][j] = a[i * nodes + j];
+			}
+		}
 	}
+	graph(int * a, int numNodes){
+		distsCalculated = false;
+		nodes = numNodes;
+		adj = new bool *[nodes];
+		dist = new int *[nodes];
+		for (int i = 0; i < nodes; i++){
+			adj[i] = new bool[nodes];
+			dist[i] = new int[nodes];
+		}
+		for (int i = 0; i < nodes; i++)
+		for (int j = 0; j < nodes; j++){
+			if (a[nodes * i + j]) adj[i][j] = true;
+			else adj[i][j] = false;
+		}
+	}
+
 	void calcDist();
 	int diameter();
 	float average();
+	float node_average(int);
+	int node_diameter(int);
 
 	bool operator== (graph a);
 	void print();
+	void correct();
 };
