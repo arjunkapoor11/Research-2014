@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <atomic>
 #include "graph.h"
 using namespace std;
 
@@ -162,6 +163,8 @@ bool check_degree_regular(int * deg, int n, int k){
 	return n == 0;
 }
 
+std::mutex changing_diameter;
+
 void connect_graphs(int * source, int source_size, int nodes, int k, char * file_output){
 	int * x = combineGraphs(source, source_size, nodes);
 	//For the fist 16x4 64 graphs
@@ -177,7 +180,6 @@ void connect_graphs(int * source, int source_size, int nodes, int k, char * file
 		x[i * nodes * source_size + j * source_size + u * nodes + v] = 1;
 		x[j * nodes * source_size + i * source_size + v * nodes + u] = 1;
 	}
-	graph asdf(x, nodes);
 	int v1, v2;
 	int best_diameter = 100000000;
 	float best_average = 100000000.0f;
@@ -190,30 +192,40 @@ void connect_graphs(int * source, int source_size, int nodes, int k, char * file
 		}
 		deg[i] = asdf;
 	}
-	graph * g;
+	vector<int> searching_nodes, searchable_nodes;
+	for (int i = 0; i < nodes; i++) searchable_nodes.push_back(i);
 	while (!check_degree_regular(deg, nodes, k)){
 		v1 = -1; v2 = -1;
-		for (int i = source_size; i < nodes; i++){
-			for (int j = 0; j < i - (i % source_size); j++){
-				if (!x[nodes * i + j] && deg[i] < k && deg[j] < k){
-					x[nodes * i + j] = 1;
-					x[nodes * j + i] = 1;
-					g = new graph(x, nodes);
-					if (g->diameter() < best_diameter){
-						best_diameter = g->diameter();
-						best_average = g->average();
-						v1 = i;
-						v2 = j;
-					}
-					else if (g->diameter() == best_diameter && g->average() < best_average){
-						best_average = g->average();
-						v1 = i;
-						v2 = j;
-					}
-					delete[] g;
+		searching_nodes.clear();
+		for (int i = 0; i < EDGE_SEARCH_SIZE && i < searchable_nodes.size();){
+			int j = searchable_nodes[rand() % searchable_nodes.size()];
+			bool asdf = true;
+			for (auto r = searching_nodes.begin(); r != searching_nodes.end(); r++)
+				if (*r == j){
+					asdf = false;
+					break;
 				}
-				x[nodes * i + j] = 0;
-				x[nodes * j + i] = 0;
+			if (asdf){
+				searching_nodes.push_back(j);
+				i++;
+			}
+		}
+		int k = 0;
+		vector<std::thread> threads;
+		for (vector<int>::iterator a = searching_nodes.begin(); a != searching_nodes.end(); a++){
+			if (k < MAX_THREADS){
+				threads.push_back(std::thread(compare_graph, x, nodes, source_size,
+									  		  *a, searching_nodes,
+											  &best_diameter, &best_average,
+											  &v1, &v2));
+				k++;
+			}
+			else {
+				for (vector<std::thread>::iterator t = threads.begin(); t != threads.end(); t++){
+					t->join();
+				}
+				threads.clear();
+				k = 0;
 			}
 		}
 		if (v1 < 0){
@@ -235,26 +247,79 @@ void connect_graphs(int * source, int source_size, int nodes, int k, char * file
 		x[v2 * nodes + v1] = 1;
 		deg[v1]++;
 		deg[v2]++;
+		if (deg[v1] == k){
+			for (vector<int>::iterator i = searchable_nodes.begin(); i != searchable_nodes.end(); i++){
+				if (*i == v1){
+					searchable_nodes.erase(i);
+					break;
+				}
+			}
+		}
+		if (deg[v2] == k){
+			for (vector<int>::iterator i = searchable_nodes.begin(); i != searchable_nodes.end(); i++){
+				if (*i == v2){
+					searchable_nodes.erase(i);
+					break;
+				}
+			}
+		}
 		count++;
-		//std::cout << "Added an edge\n";
+		std::cout << "Added an edge\n";
 	}
-	ofstream f(file_output);
+	/*ofstream f(file_output);
 	for (int i = 0; i < nodes; i++){
 		for (int j = 0; j < nodes; j++){
 			f << x[nodes * i + j];
 		}
 		f << "\n";
-	}
+	}*/
 	graph gr(x, nodes);
-	f << "Diameter: " << gr.diameter() << "\nAverage: " << gr.average() << "\n";
-	f.close();
+	//f << "Diameter: " << gr.diameter() << "\nAverage: " << gr.average() << "\n";
+//	f.close();
 	std::cout << source_size << "x" << source_size << " graph coonected to form a " << nodes << "x" << nodes << "graph\n";
 	std::cout << "Diameter: " << gr.diameter() << "\nAverage: " << gr.average() << "\n";
-	//delete[] deg, x;
+	delete[] deg;
+	delete[] x;
+}
+
+void compare_graph(int * gr, int nodes, int source_size,
+	int i, vector<int> search_nodes,
+	int * best_diameter, float * best_average,
+	int * v1, int * v2){
+	graph * g;
+	int * x = new int[nodes * nodes];
+	memcpy(x, gr, nodes * nodes * sizeof(int));
+	for (vector<int>::iterator a = search_nodes.begin(); a != search_nodes.end(); a++){
+		int j = *a;
+		if (!x[nodes * i + j] &&
+			i - (i % source_size) != j - (j % source_size)){
+			x[nodes * i + j] = 1;
+			x[nodes * j + i] = 1;
+			g = new graph(x, nodes);
+			g->calcDist();
+			changing_diameter.lock();
+			if (g->diameter() < *best_diameter){
+				*best_diameter = g->diameter();
+				*best_average = g->average();
+				*v1 = i;
+				*v2 = j;
+			}
+			else if (g->diameter() == *best_diameter && g->average() < *best_average){
+				*best_average = g->average();
+				*v1 = i;
+				*v2 = j;
+			}
+			changing_diameter.unlock();
+			delete g;
+			x[nodes * i + j] = 0;
+			x[nodes * j + i] = 0;
+		}
+	}
+	delete[] x;
 }
 
 int main(){
-	connect_graphs(&optimal8node[0][0], 8, 64, 6, "Graph8x8Redone.txt");
+	//connect_graphs(&optimal8node[0][0], 8, 64, 6, "Graph8x8Redone.txt");
 	connect_graphs(&optimal16node[0][0], 16, 256, 8, "Graph16x16.txt");
 	int * x = load_file("NewGraph.txt", 64);
 	connect_graphs(x, 64, 256, 8, "Graph64x4.txt");
@@ -266,7 +331,7 @@ void random_walk(bool * x, int nodes){
 	for (int i = 0; i < nodes; i++) rw[i] = new float[nodes];
 	for (int i = 0; i < nodes; i++){
 		for (int j = 0; j < nodes; j++){
-			if (x[nodes * i + j]) rw[i][j] = 1.0 / 1.23412;
+			if (x[nodes * i + j]) rw[i][j] = 1.0 / 1.22;
 			else rw[i][j] = 0;
 		}
 	}

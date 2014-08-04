@@ -1,10 +1,15 @@
-﻿Build started 8/2/2014 9:39:26 AM.
+﻿Build started 8/4/2014 7:01:16 PM.
      1>Project "C:\Users\Ryan\Documents\GitHub\Research-2014\Project2\Project2.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Source.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Source.cpp graph.cpp
          Source.cpp
-     1>c:\users\ryan\documents\github\research-2014\project2\source.cpp(268): warning C4305: '=' : truncation from 'double' to 'float'
-     1>c:\users\ryan\documents\github\research-2014\project2\source.cpp(274): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\ryan\documents\github\research-2014\project2\source.cpp(200): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\ryan\documents\github\research-2014\project2\source.cpp(334): warning C4305: '=' : truncation from 'double' to 'float'
+     1>c:\users\ryan\documents\github\research-2014\project2\source.cpp(340): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+         Generating Code...
+         Compiling...
+         graph.cpp
+         Generating Code...
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Ryan\Documents\GitHub\Research-2014\Debug\Project2.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Ryan\Documents\GitHub\Research-2014\Debug\Project2.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Ryan\Documents\GitHub\Research-2014\Debug\Project2.lib" /MACHINE:X86 Debug\graph.obj
          Debug\Source.obj
@@ -13,4 +18,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.36
+Time Elapsed 00:00:09.21

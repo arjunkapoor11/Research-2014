@@ -1,8 +1,19 @@
 #include <vector>
+#include <atomic>
+#include <thread>
+#include <mutex>
 using std::vector;
+using namespace std;
+
+#define EDGE_SEARCH_SIZE 10
+#define MAX_THREADS 2
 
 int * combineGraphs(int * graph, int, int);
 void das(bool *, int, int, int, int, int);
+void compare_graph(int * gr, int nodes, int source_size,
+	int i, vector<int> search_nodes,
+	int * best_diameter, float * best_average,
+	int * v1, int * v2);
 
 class graph
 {
@@ -41,6 +52,15 @@ public:
 			if (a[nodes * i + j]) adj[i][j] = true;
 			else adj[i][j] = false;
 		}
+	}
+
+	~graph(){
+		for (int i = 0; i < nodes; i++){
+			delete[] adj[i];
+			delete[] dist[i];
+		}
+		delete[] adj;
+		delete[] dist;
 	}
 
 	void calcDist();
