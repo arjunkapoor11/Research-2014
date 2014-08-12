@@ -5,8 +5,8 @@
 using std::vector;
 using namespace std;
 
-#define EDGE_SEARCH_SIZE 10
-#define MAX_THREADS 2
+#define EDGE_SEARCH_SIZE 100
+#define MAX_THREADS 32
 
 int * combineGraphs(int * graph, int, int);
 void das(bool *, int, int, int, int, int);
